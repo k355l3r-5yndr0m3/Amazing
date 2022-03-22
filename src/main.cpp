@@ -1,7 +1,14 @@
+#include "Application.hpp"
+#define MAZE_SIZE 16
+
+
+
 #include <cmath>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib> 
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/geometric.hpp>
 #include <string> 
 #include <chrono>
 
@@ -13,6 +20,10 @@
 #include <SDL2/SDL_ttf.h>
 #include <SOIL/SOIL.h>
 
+#include <assimp/Importer.hpp> 
+#include <assimp/scene.h> 
+#include <assimp/postprocess.h>
+
 #include "Camera.hpp"
 #include "glad/glad.h"
 
@@ -20,8 +31,9 @@
 #include "stb_image.h"
 
 #include "resource_loader.hpp"
-#include "rendering.hpp"
+#include "Mesh.hpp"
 #include "ShaderProgram.hpp"
+#include "Maze.hpp"
 
 #define GAME_NAME "Game" 
 #define PRIMARY_FONT_FILE "assets/fonts/RobotoMono-Regular.ttf"
@@ -210,9 +222,6 @@ struct default_cube {
 		glEnableVertexAttribArray(3);
 		glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texture));
 
-	//	glEnableVertexAttribArray(2);
-	//	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texture));
-
 		glBindVertexArray(0);
 
 		int texture_width, texture_height, texture_nrChannels;
@@ -254,7 +263,13 @@ inline void initialization() {
 
 
 
-int main() {
+int notmain() { 
+	PrimMaze<MAZE_SIZE> testMaze(3451341);
+	testMaze.printMaze();
+
+	
+
+
 	initialization();
 	
 	SDL_Window* window;
@@ -280,19 +295,37 @@ int main() {
 
 
 
+
+
+
+	Assimp::Importer importer;
+
+	const aiScene* utah = importer.ReadFile("assets/objects/Wall.obj", aiProcess_Triangulate | aiProcess_GenSmoothNormals);
+
+	Mesh teacup(utah->mMeshes[0], true);
+
+
+	const aiScene* sphere = importer.ReadFile("assets/objects/sphere.obj", aiProcess_GenSmoothNormals | aiProcess_Triangulate);
+	Mesh ball(sphere->mMeshes[0]);
+
 	ShaderProgram wall_material("assets/shaders/wall_material_vertex.glsl", "assets/shaders/wall_material_fragment.glsl");
 
+	/*
 	default_cube cube;
 	cube.init();
-
+	*/
 
 
 	glm::mat4 Model = glm::mat4(1.0f);
-	glm::mat4 Position_0 = glm::translate(Model, glm::vec3(0.0f, 0.0f,-1.0f));
+	glm::mat4 Scale = glm::scale(Model, {1.0f, 1.0f, 1.0f});
+	glm::mat4 Position_0 = glm::translate(Scale, glm::vec3(0.0f, 0.0f,-1.0f));
 
-	Camera cam(w, h, {4.0f, 0.0f, 0.0f}, {M_PI, 0.0});
+	glm::mat4 Position_1 = glm::scale(glm::translate(glm::mat4(1.0f), {1.0f, 4.0f, 1.0f}), {1.0f, 1.0f, 1.0f});
+
+	Camera cam(w, h, {4.0f, 2.0f, 0.0f}, {M_PI, 0.0});
 
 	glm::mat4 mvp0 = cam.getMatrix() * Position_0;
+	glm::mat4 mvp1 = cam.getMatrix() * Position_1;
 	GLuint MatrixID_wall = wall_material.uniformLocation("MVP");
 
 
@@ -316,6 +349,7 @@ int main() {
 	while (alive) {
 		forward = cam.getFacingDirection();
 		forward.y = 0.0f;
+		forward = glm::normalize(forward);
 		left = glm::cross({0.0f, 1.0f, 0.0f}, forward);
 
 		SDL_Event event;
@@ -361,31 +395,43 @@ int main() {
 					break;
 			}
 		}
-		cam.translate((left * move_left + forward * move_forward) * 0.01f);
+		cam.translate((left * move_left + forward * move_forward) * 0.1f);
+		mvp1 = cam.getMatrix() * Position_1;
 		mvp0 = cam.getMatrix() * Position_0;
+
 		auto camPos = cam.getPosition();
 		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
 		wall_material.run();
-		glUniform3f(lightSource, 1.0f, 1.0f, 1.0f);
+		glUniform3f(lightSource, 0.0f, 6.0f, 0.0f);
 		glUniform3f(lightColor, 0.9f, 0.8f, 0.9f);
 		glUniform3f(eyePos, camPos.x, camPos.y, camPos.z);
 		glUniformMatrix4fv(MatrixID_wall, 1, GL_FALSE, &mvp0[0][0]);
-		glBindTexture(GL_TEXTURE_2D, cube.texture);
-		cube.draw();
+		teacup.draw();
+		// glBindTexture(GL_TEXTURE_2D, cube.texture);
+	//	cube.draw();
+		glUniformMatrix4fv(MatrixID_wall, 1, GL_FALSE, &mvp1[0][0]);
+		ball.draw();
 
 
 		SDL_GL_SwapWindow(window);
 	}
 
-	cube.destroy();
+	// cube.destroy();
 	
 
 	SDL_GL_DeleteContext(gl_context);
 	SDL_DestroyWindow(window);
 
 	SDL_Quit();
+	return 0;
+}
+
+int main() {
+	Application app;
+	app.mainLoop();
+
 	return 0;
 }

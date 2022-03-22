@@ -15,13 +15,16 @@ uniform vec3 lightColor;
 
 // uniform sampler2D appliedTexture;
 
-
+const vec3 ambientColor = vec3(0.16f, 0.16f, 0.16f);
 
 void main() {
 	vec3 normal = normalize(fragmentNormal);
 	vec3 lightDir = normalize(lightSource - fragmentPosition);
 	vec3 viewDir = normalize(eyePos - fragmentPosition);
 	vec3 reflectDir = reflect(-lightDir, normal);
-	color = vec4(fragmentColor * (lightColor * (max(dot(normal, lightDir), 0.0f) + pow(max(dot(viewDir, reflectDir), 0), 2)) + vec3(0.02f, 0.08f, 0.1f)), 1.0f);
+
+	vec3 lightDis =lightSource - fragmentPosition; 
+	float distanceSquare = dot(lightDis / 2.0f, lightDis / 2.0f);
+	color = vec4(fragmentColor * (lightColor * (max(dot(normal, lightDir), 0.0f) + pow(max(dot(viewDir, reflectDir), 0), 2)) + ambientColor), 1.0f);
 
 }

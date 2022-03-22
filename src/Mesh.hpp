@@ -1,6 +1,9 @@
 #pragma once 
 #include "glad/glad.h"
+#include <assimp/SceneCombiner.h>
 #include <string>
+
+#include <assimp/scene.h>
 
 struct Vertex {
 	GLfloat position[3];
@@ -12,10 +15,10 @@ struct Vertex {
 
 class Mesh {
 	public:
-		Mesh();
+		Mesh(aiMesh* data, bool flipNormal = false);
 		~Mesh();
-
-		int loadFromFile(std::string path);
+		
+		void draw();
 
 	private:
 		Vertex* vertices;
