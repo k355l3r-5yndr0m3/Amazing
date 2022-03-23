@@ -1,11 +1,13 @@
 #include "Application.hpp" 
 
 #include "Camera.hpp"
+#include "Maze.hpp"
 #include "ShaderProgram.hpp"
 #include "glad/glad.h"
 #include "Mesh.hpp"
 
 #include <SDL2/SDL.h>
+#include <algorithm>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -21,6 +23,9 @@ Application::Application() {
 	if ((window = SDL_CreateWindow(applicationName, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, windowWidth, windowHeight, SDL_WINDOW_OPENGL)) == nullptr) {
 		throw "Failed to create window";
 	}
+	SDL_SetRelativeMouseMode(SDL_TRUE);
+	SDL_SetWindowGrab(window, SDL_TRUE);
+
 	glcontext = SDL_GL_CreateContext(window);
 	gladLoadGLLoader(SDL_GL_GetProcAddress);
 
@@ -32,10 +37,12 @@ Application::Application() {
 	glEnable(GL_DEPTH_TEST);
 	
 	standardShader = new ShaderProgram("assets/shaders/wall_material_vertex.glsl", "assets/shaders/wall_material_fragment.glsl");
+	maze = new PrimMaze<16>(4);
 }
 
 Application::~Application() {
 	delete standardShader;
+	delete maze;
 
 	SDL_GL_DeleteContext(glcontext);
 	SDL_DestroyWindow(window);
@@ -44,15 +51,8 @@ Application::~Application() {
 
 void Application::mainLoop() {
 	bool alive = true;
+	Camera mainCam(windowWidth, windowHeight, {0.0f, 4.0f, 0.0f});
 
-	Assimp::Importer meshImporter;
-	const aiScene* mazeWall = meshImporter.ReadFile("assets/objects/MazeWall_unoptimized.obj", aiProcess_GenSmoothNormals | aiProcess_Triangulate);
-
-	Mesh wallMaze(mazeWall->mMeshes[0]);
-
-	Camera mainCam(windowWidth, windowHeight, {0.0f, 4.8f, 0.0f});
-
-	glm::mat4 wallMazeMatrix = glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, 0.0f});
 
 
 	GLuint MatrixID = standardShader->uniformLocation("MVP");
@@ -60,8 +60,12 @@ void Application::mainLoop() {
 	GLuint lightColor = standardShader->uniformLocation("lightColor");
 	GLuint eyePos = standardShader->uniformLocation("eyePos");
 
-
-
+	Assimp::Importer importer; 
+	const aiScene* prizeMesh = importer.ReadFile("assets/objects/prize.obj", 0);
+	Mesh testSphere(prizeMesh->mMeshes[0]);
+	
+	const aiScene* mazeFloor = importer.ReadFile("assets/objects/floor.obj", 0);
+	Mesh floor(mazeFloor->mMeshes[0]);
 
 
 	glm::vec3 velocity = {0.0f, 0.0f, 0.0f};
@@ -119,25 +123,31 @@ void Application::mainLoop() {
 					break;
 			}
 		}
-		mainCam.translate((left * move_left + forward * move_forward) * 0.1f);
-		glm::mat4 mvp = mainCam.getMatrix() * wallMazeMatrix;
-
-
-
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glm::vec3 displacement = (left * move_left + forward * move_forward) * 0.1f; 
+		glm::vec3 testCamPos = mainCam.getPosition() + displacement ;
+		if (maze->isPassage(testCamPos.x, testCamPos.z)) {
+			mainCam.translate(displacement * 0.98f);
+		}
 		glm::vec3 camPos = mainCam.getPosition();
 
+		glm::mat4 mvp = mainCam.getMatrix() * glm::translate(glm::mat4(1.0f), {camPos.x, 0.0f, camPos.z});
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		standardShader->run();
-		glUniform3f(lightSource, 4.0f, 10.0f, 4.0f);
+		glUniform3f(lightSource, camPos.x, 3.0f, camPos.z);
 		glUniform3f(lightColor, 0.9f, 0.8f, 0.9f);
 		glUniform3f(eyePos, camPos.x, camPos.y, camPos.z);
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
 		
-		wallMaze.draw();
+		floor.draw();
+		maze->drawWalls(mainCam.getMatrix(), MatrixID);
 
 		SDL_GL_SwapWindow(window);
-
+		
+		if (maze->atDest(camPos.x, camPos.z)) {
+			std::printf("Congrat\n");
+		}
 	}
-
+	
 }

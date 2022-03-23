@@ -9,10 +9,12 @@ class Camera {
 
 		glm::mat4 getMatrix();
 		void translate(const glm::vec3& translation);
+		void setPosition(const glm::vec3& position);
 		void rotate(const glm::vec2& angle);
 
 		glm::vec3 getFacingDirection();
 		glm::vec3 getPosition();
+		glm::vec2 getFacing();
 	private: 
 		int w, h;
 

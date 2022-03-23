@@ -16,5 +16,5 @@ void main() {
 	fragmentColor = vertexColor;
  	fragmentTexture = vertexTextureCoord;
 	fragmentNormal = vertexNormal;
-	fragmentPosition = vertexPosition;
+	fragmentPosition = gl_Position.xyz;
 }
