@@ -31,7 +31,7 @@ Application::Application() {
 
 	glViewport(0, 0, windowWidth, windowHeight);
 	
-	glClearColor(0.4f, 0.1f, 0.2f, 0.7f);
+	glClearColor(0.4f, 0.1f, 0.8f, 0.1f);
 	glClearDepth(1.0);
 
 	glEnable(GL_DEPTH_TEST);
@@ -50,6 +50,8 @@ Application::~Application() {
 }
 
 void Application::mainLoop() {
+	std::printf("Find the icosphere\n");
+
 	bool alive = true;
 	Camera mainCam(windowWidth, windowHeight, {0.0f, 4.0f, 0.0f});
 
@@ -135,7 +137,7 @@ void Application::mainLoop() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		standardShader->run();
-		glUniform3f(lightSource, camPos.x, 3.0f, camPos.z);
+		glUniform3f(lightSource, 0.0f, 50.0f, 0.0f);
 		glUniform3f(lightColor, 0.9f, 0.8f, 0.9f);
 		glUniform3f(eyePos, camPos.x, camPos.y, camPos.z);
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
@@ -146,7 +148,8 @@ void Application::mainLoop() {
 		SDL_GL_SwapWindow(window);
 		
 		if (maze->atDest(camPos.x, camPos.z)) {
-			std::printf("Congrat\n");
+			std::printf("Congrat, you won!\n");
+			break;
 		}
 	}
 	

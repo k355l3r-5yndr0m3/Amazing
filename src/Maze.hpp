@@ -84,7 +84,7 @@ class PrimMaze {
 				}
 			}}
 
-			prizeMatrix = glm::translate(glm::mat4(1.0f), {(float)(destination.i - mazeSize/2) * MAZE_CELL_SIZE , 0.0f, (float)(destination.j - mazeSize/2) * MAZE_CELL_SIZE});
+			prizeMatrix = glm::translate(glm::mat4(1.0f), {(float)(destination.i - mazeSize/2) * MAZE_CELL_SIZE , 4.0f, (float)(destination.j - mazeSize/2) * MAZE_CELL_SIZE});
 			
 		}
 		~PrimMaze() {

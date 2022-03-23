@@ -16,7 +16,7 @@ class Application {
 	private:
 		static constexpr char applicationName[] = "Game";
 
-		int windowWidth = 800, windowHeight = 600;
+		int windowWidth = 1000, windowHeight = 800;
 
 		SDL_Window* window;
 		SDL_GLContext glcontext;
