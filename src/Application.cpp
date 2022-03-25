@@ -11,10 +11,12 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <cstdint>
 #include <cstdio>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
+#include <fstream>
 
 Application::Application() {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -37,7 +39,14 @@ Application::Application() {
 	glEnable(GL_DEPTH_TEST);
 	
 	standardShader = new ShaderProgram("assets/shaders/wall_material_vertex.glsl", "assets/shaders/wall_material_fragment.glsl");
-	maze = new PrimMaze<16>(4);
+
+	uint32_t seed;
+	std::ifstream entropyPool("/dev/random");
+	entropyPool.read(reinterpret_cast<char*>(&seed), sizeof(seed));
+	std::printf("Maze seed: %u\n", seed);
+	entropyPool.close();
+
+	maze = new PrimMaze<16>(seed);
 }
 
 Application::~Application() {

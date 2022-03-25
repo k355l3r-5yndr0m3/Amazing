@@ -9,7 +9,7 @@ EXECUTABLE=game
 build: build_directory executable
 
 executable: main.o glad.o resource_loader.o ShaderProgram.o Camera.o Mesh.o Application.o
-	$(CPP) build/*.o $(CFLAGS) -o $(EXECUTABLE)
+	$(CPP) -O3 build/*.o $(CFLAGS) -o $(EXECUTABLE)
 
 clean: 
 	rm build/*.o
