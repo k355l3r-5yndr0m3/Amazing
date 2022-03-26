@@ -102,14 +102,6 @@ class PrimMaze {
 		}
 
 		void drawWalls(glm::mat4 camMatrix, GLuint matrixID) {
-			/*
-			for (int32_t i = 0; i < mazeSize; i++) { for (int32_t j = 0; j < mazeSize; j++) {
-				if (!mazeMap[i][j]) {
-					glm::mat4 mvp = camMatrix * glm::translate(glm::mat4(1.0f), {(float)(i - mazeSize/2) * MAZE_CELL_SIZE , 0.0f, (float)(j - mazeSize/2) * MAZE_CELL_SIZE});
-					glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
-					mazeWall->draw();
-				}
-			}} */
 			for (glm::mat4& transformMatrix : wallMatrices) {
 				glm::mat4 mvp = camMatrix * transformMatrix;
 				glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);

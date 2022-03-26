@@ -8,7 +8,7 @@ EXECUTABLE=game
 
 build: build_directory executable
 
-executable: main.o glad.o resource_loader.o ShaderProgram.o Camera.o Mesh.o Application.o
+executable: main.o glad.o ShaderProgram.o Camera.o Mesh.o Application.o
 	$(CPP) -O3 build/*.o $(CFLAGS) -o $(EXECUTABLE)
 
 clean: 
@@ -20,9 +20,6 @@ main.o: src/main.cpp
 
 glad.o: src/glad.c
 	$(CC) -c src/glad.c $(LINKERS) -o build/glad.o
-
-resource_loader.o: src/resource_loader.cpp
-	$(CPP) -c src/resource_loader.cpp $(LINKERS) -o build/resource_loader.o
 
 ShaderProgram.o: src/ShaderProgram.cpp
 	$(CPP) -c src/ShaderProgram.cpp $(LINKERS) -o build/ShaderProgram.o

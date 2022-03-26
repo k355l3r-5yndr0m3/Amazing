@@ -30,7 +30,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include "resource_loader.hpp"
 #include "Mesh.hpp"
 #include "ShaderProgram.hpp"
 #include "Maze.hpp"
