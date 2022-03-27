@@ -46,7 +46,7 @@ Application::Application() {
 	std::printf("Maze seed: %u\n", seed);
 	entropyPool.close();
 
-	maze = new PrimMaze<16>(seed);
+	maze = new PrimMaze<32>(seed);
 }
 
 Application::~Application() {
@@ -146,7 +146,7 @@ void Application::mainLoop() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		standardShader->run();
-		glUniform3f(lightSource, 0.0f, 50.0f, 0.0f);
+		glUniform3f(lightSource, 0.0f, 50.0f, 0.0f); 
 		glUniform3f(lightColor, 0.9f, 0.8f, 0.9f);
 		glUniform3f(eyePos, camPos.x, camPos.y, camPos.z);
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);

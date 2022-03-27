@@ -14,7 +14,7 @@ class Application {
 		void mainLoop();
 
 	private:
-		static constexpr char applicationName[] = "Game";
+		static constexpr char applicationName[] = "Procedurally generated maze";
 
 		int windowWidth = 1000, windowHeight = 800;
 
@@ -22,5 +22,5 @@ class Application {
 		SDL_GLContext glcontext;
 
 		ShaderProgram* standardShader;
-		PrimMaze<16>* maze;
+		PrimMaze<32>* maze;
 };
