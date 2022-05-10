@@ -16,11 +16,11 @@ class Application {
 	private:
 		static constexpr char applicationName[] = "Procedurally generated maze";
 
-		int windowWidth = 1000, windowHeight = 800;
+		int windowWidth = 1200, windowHeight = 800;
 
 		SDL_Window* window;
 		SDL_GLContext glcontext;
 
 		ShaderProgram* standardShader;
-		PrimMaze<32>* maze;
+		PrimMaze64* maze;
 };

@@ -4,7 +4,8 @@
 #include "Maze.hpp"
 #include "ShaderProgram.hpp"
 #include "glad/glad.h"
-#include "Mesh.hpp"
+#include "Mesh3D.hpp"
+#include "Enemy.hpp" 
 
 #include <SDL2/SDL.h>
 #include <algorithm>
@@ -17,6 +18,7 @@
 #include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 #include <fstream>
+#include <vector>
 
 Application::Application() {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -46,7 +48,7 @@ Application::Application() {
 	std::printf("Maze seed: %u\n", seed);
 	entropyPool.close();
 
-	maze = new PrimMaze<32>(seed);
+	maze = new PrimMaze64(seed);
 }
 
 Application::~Application() {
@@ -60,6 +62,7 @@ Application::~Application() {
 
 void Application::mainLoop() {
 	std::printf("Find the icosphere\n");
+	std::printf("There are floating cubes that will end the game if you touches them.\n");
 
 	bool alive = true;
 	Camera mainCam(windowWidth, windowHeight, {0.0f, 4.0f, 0.0f});
@@ -71,13 +74,18 @@ void Application::mainLoop() {
 	GLuint lightColor = standardShader->uniformLocation("lightColor");
 	GLuint eyePos = standardShader->uniformLocation("eyePos");
 
-	Assimp::Importer importer; 
-	const aiScene* prizeMesh = importer.ReadFile("assets/objects/prize.obj", 0);
-	Mesh testSphere(prizeMesh->mMeshes[0]);
-	
-	const aiScene* mazeFloor = importer.ReadFile("assets/objects/floor.obj", 0);
-	Mesh floor(mazeFloor->mMeshes[0]);
+	Mesh3D prize, floor, enemy;
+	prize.loadFromFile("assets/objects/prize.obj");
+	floor.loadFromFile("assets/objects/floor.obj");
+	enemy.loadFromFile("assets/objects/defaultCube.obj");
 
+
+	std::vector<Enemy> enemies;
+	for (int i = 0; i < 40; i++) {
+		enemies.push_back(Enemy(maze));
+	}
+
+	glm::vec3 enemy_col = {0.5f, 0.1f, 9.0f};
 
 	glm::vec3 velocity = {0.0f, 0.0f, 0.0f};
 	glm::vec3 forward = mainCam.getFacingDirection();
@@ -134,11 +142,14 @@ void Application::mainLoop() {
 					break;
 			}
 		}
-		glm::vec3 displacement = (left * move_left + forward * move_forward) * 0.1f; 
+		glm::vec3 displacement = (left * move_left + forward * move_forward) * 0.2f; 
 		glm::vec3 testCamPos = mainCam.getPosition() + displacement ;
 		if (maze->isPassage(testCamPos.x, testCamPos.z)) {
 			mainCam.translate(displacement * 0.98f);
 		}
+
+
+
 		glm::vec3 camPos = mainCam.getPosition();
 
 		glm::mat4 mvp = mainCam.getMatrix() * glm::translate(glm::mat4(1.0f), {camPos.x, 0.0f, camPos.z});
@@ -151,11 +162,32 @@ void Application::mainLoop() {
 		glUniform3f(eyePos, camPos.x, camPos.y, camPos.z);
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
 		
-		floor.draw();
-		maze->drawWalls(mainCam.getMatrix(), MatrixID);
+		floor.draw(); 
+		maze->drawWalls(mainCam.getMatrix(), MatrixID, lightColor);
+
+		glUniform3f(lightColor, enemy_col.x, enemy_col.y, enemy_col.z);
+		for (auto& e : enemies) {
+			e.update();
+			glm::mat4 mvp1 = mainCam.getMatrix() * glm::translate(glm::mat4(1.0f), e.getPosition() + glm::vec3(0.0f, 2.0f, 0.0f));
+			glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp1[0][0]);
+			enemy.draw();
+		}
 
 		SDL_GL_SwapWindow(window);
 		
+		for (auto& e : enemies) {
+			auto a = e.getPosition();
+			a.y = 0.0;
+			camPos.y = 0.0;
+
+			auto diff = (a - camPos);
+			float l = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
+			if (l < 4.0f) {
+				printf("You lost!\n");
+				alive = false;
+				break;
+			}
+		}
 		if (maze->atDest(camPos.x, camPos.z)) {
 			std::printf("Congrat, you won!\n");
 			break;

@@ -1,6 +1,6 @@
 #pragma once 
 
-#include "Mesh.hpp"
+#include "Mesh3D.hpp"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -24,28 +24,25 @@ template<int32_t mazeSize>
 class PrimMaze {
 	public: 
 		PrimMaze(int32_t seed) {
-			Assimp::Importer importer; 
-			const aiScene* mazeWallMesh = importer.ReadFile("assets/objects/MazeWall_unoptimized.obj", 0);
-			mazeWall = new Mesh(mazeWallMesh->mMeshes[0]);
+			mazeWall = new Mesh3D;
+			mazeWall->loadFromFile("assets/objects/MazeWall_unoptimized.obj");
+			prize = new Mesh3D;
+			prize->loadFromFile("assets/objects/prize.obj");
 
-			const aiScene* prizeMesh = importer.ReadFile("assets/objects/prize.obj", 0);
-			prize = new Mesh(prizeMesh->mMeshes[0]);
 			for (int32_t i = 0; i < mazeSize; i++) {
 				for (int32_t j = 0; j < mazeSize; j++) {
 					mazeMap[i][j] = false;
 				}
 			}
 
-			std::mt19937 pseudorandom(seed);
+			pseudorandom.seed(seed);
 			std::vector<MazeCoordinate> walls;	
 			walls.push_back({mazeSize / 2, mazeSize / 2});
 
 			do {
 				size_t randomPick = pseudorandom() % walls.size();			
 				MazeCoordinate pickedWall = walls.at(randomPick);
-				// std::printf("%d\n", walls.size());
 				walls.erase(walls.begin() + randomPick);
-				// std::printf("%d\n", walls.size());
 				
 				if (pickedWall.i == 0 || pickedWall.i == (mazeSize - 1) || pickedWall.j == 0 || pickedWall.j == (mazeSize - 1)) {
 					continue;
@@ -58,10 +55,8 @@ class PrimMaze {
 					for (int32_t dj = -1; dj <= 1; dj++) {
 						if ((di == 0 && dj == 0) || di * dj != 0) continue;
 						adjacentPassageCount += (mazeMap[pickedWall.i + di][pickedWall.j + dj] ? 1 : 0);
-						// if (mazeMap[pickedWall.i + di][pickedWall.j + dj]) std::printf("Hello");
 					}
 				}
-				// std::printf("\tAdj : %d\n", adjacentPassageCount); 
 
 				if (adjacentPassageCount > 1) {
 					continue;
@@ -74,7 +69,6 @@ class PrimMaze {
 				walls.push_back({pickedWall.i, pickedWall.j + 1});
 
 				destination = pickedWall;
-				// std::printf("%d\n", walls.size());
 			} while (walls.size() > 0);
 			
 			wallMatrices.reserve(mazeSize * mazeSize);
@@ -101,7 +95,7 @@ class PrimMaze {
 			}
 		}
 
-		void drawWalls(glm::mat4 camMatrix, GLuint matrixID) {
+		void drawWalls(glm::mat4 camMatrix, GLuint matrixID, GLuint color) {
 			for (glm::mat4& transformMatrix : wallMatrices) {
 				glm::mat4 mvp = camMatrix * transformMatrix;
 				glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
@@ -109,6 +103,8 @@ class PrimMaze {
 			}
 			glm::mat4 mvp = camMatrix * prizeMatrix;
 			glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
+
+			glUniform3f(color, 0.1f, 0.8f, 0.9f);
 			prize->draw();	
 		}
 
@@ -127,9 +123,59 @@ class PrimMaze {
 			return destination.i == i && destination.j == j;
 		}
 
+		glm::vec3 getRandomEmptyPoint() {
+			int32_t i, j;
+			do {
+				i = pseudorandom() % mazeSize;
+				j = pseudorandom() % mazeSize;
+			} while (!mazeMap[i][j]);
+			return {(float)(i - mazeSize/2) * MAZE_CELL_SIZE , 0.0f, (float)(j - mazeSize/2) * MAZE_CELL_SIZE};
+		}
+
+		
+		std::mt19937 pseudorandom;
+
+		
+		// So much spighetty code 
+		MazeCoordinate request_new_heading(MazeCoordinate old, MazeCoordinate current) {
+			std::vector<MazeCoordinate> temp;
+
+			// This is slightly unsafe, but it ought not to matter 
+			if (mazeMap[current.i - 1][current.j] && old.i != current.i - 1) temp.push_back({current.i - 1, current.j});
+			if (mazeMap[current.i + 1][current.j] && old.i != current.i + 1) temp.push_back({current.i + 1, current.j});
+			if (mazeMap[current.i][current.j - 1] && old.j != current.j - 1) temp.push_back({current.i, current.j - 1});
+			if (mazeMap[current.i][current.j + 1] && old.j != current.j + 1) temp.push_back({current.i, current.j + 1});
+
+			if (temp.size() == 0) return old;
+			return temp[pseudorandom() % temp.size()];
+		}
+
+		MazeCoordinate random_point() {
+			while (true) {
+				int i = pseudorandom() % mazeSize, j = pseudorandom() % mazeSize;
+				if (mazeMap[i][j]) return {i, j};
+			}
+		}
+		MazeCoordinate random_point(MazeCoordinate a) {
+			std::vector<MazeCoordinate> temp;
+
+			// This is slightly unsafe, but it ought not to matter 
+			if (mazeMap[a.i - 1][a.j]) temp.push_back({a.i - 1, a.j});
+			if (mazeMap[a.i + 1][a.j]) temp.push_back({a.i + 1, a.j});
+			if (mazeMap[a.i][a.j - 1]) temp.push_back({a.i, a.j - 1});
+			if (mazeMap[a.i][a.j + 1]) temp.push_back({a.i, a.j + 1});
+
+			return temp[pseudorandom() % temp.size()];
+		}
+
+		inline glm::vec3 intcoordtofloatcoord(MazeCoordinate c) {
+			return {(float)(c.i - mazeSize/2) * MAZE_CELL_SIZE , 0.0f, (float)(c.j - mazeSize/2) * MAZE_CELL_SIZE};
+		}
+
 	private: 
-		Mesh* mazeWall;
-		Mesh* prize;
+
+		Mesh3D* mazeWall;
+		Mesh3D* prize;
 
 		MazeCoordinate destination;
 		std::vector<glm::vec3> corners;
@@ -138,3 +184,5 @@ class PrimMaze {
 		std::vector<glm::mat4> wallMatrices;
 		glm::mat4 prizeMatrix;
 };
+
+typedef PrimMaze<64> PrimMaze64;
