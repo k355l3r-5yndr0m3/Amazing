@@ -4,7 +4,7 @@ in vec3 fragmentColor;
 in vec3 fragmentNormal;
 in vec2 fragmentTexture;
 
-
+uniform sampler2D defuse;
 
 out vec4 color;
 
@@ -15,7 +15,7 @@ uniform vec3 lightColor;
 
 // uniform sampler2D appliedTexture;
 
-const vec3 ambientColor = vec3(0.16f, 0.16f, 0.16f);
+const vec3 ambientColor = vec3(0.3f, 0.3f, 0.3f);
 
 void main() {
 	vec3 normal = normalize(fragmentNormal);
@@ -25,6 +25,6 @@ void main() {
 
 	vec3 lightDis =lightSource - fragmentPosition; 
 	float distanceSquare = dot(lightDis / 2.0f, lightDis / 2.0f);
-	color = vec4(fragmentColor * (lightColor * (max(dot(normal, lightDir), 0.0f) + pow(max(dot(viewDir, reflectDir), 0), 2)) + ambientColor), 1.0f);
+	color = vec4(fragmentColor * lightColor * ((max(dot(normal, lightDir), 0.0f) + pow(max(dot(viewDir, reflectDir), 0), 2)) + ambientColor), 1.0f) * texture(defuse, fragmentTexture);
 
 }
