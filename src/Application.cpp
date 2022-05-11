@@ -20,6 +20,10 @@
 #include <fstream>
 #include <vector>
 
+#define PLAYER_SPEED 18.0f
+
+float delta = 0.0f;
+
 Application::Application() {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		throw "SDL initialization failed"; 
@@ -67,6 +71,8 @@ void Application::mainLoop() {
 	bool alive = true;
 	Camera mainCam(windowWidth, windowHeight, {0.0f, 4.0f, 0.0f});
 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 
 	GLuint MatrixID = standardShader->uniformLocation("MVP");
@@ -74,10 +80,9 @@ void Application::mainLoop() {
 	GLuint lightColor = standardShader->uniformLocation("lightColor");
 	GLuint eyePos = standardShader->uniformLocation("eyePos");
 
-	Mesh3D prize, floor, enemy;
-	prize.loadFromFile("assets/objects/prize.obj");
-	floor.loadFromFile("assets/objects/floor.obj");
-	enemy.loadFromFile("assets/objects/defaultCube.obj");
+	Mesh3D /*prize,*/ floor, enemy;
+	floor.loadFromFile("assets/objects/floor.obj", "assets/textures/grey.jpg");
+	enemy.loadFromFile("assets/objects/defaultCube.obj", "assets/textures/BrickTexture.png");
 
 
 	std::vector<Enemy> enemies;
@@ -93,7 +98,15 @@ void Application::mainLoop() {
 	
 	glm::vec3 left = glm::cross({0.0f, 1.0f, 0.0f}, forward);
 	float move_left = 0.0, move_forward = 0.0;
+
+	prev_t = SDL_GetTicks();
+
 	while (alive) {
+		delta = SDL_GetTicks() - prev_t; 
+		delta /= 1000.0f; // Convert to second 
+		prev_t = SDL_GetTicks();
+
+
 		SDL_Event event;
 		forward = mainCam.getFacingDirection();
 		forward.y = 0.0f; 
@@ -142,7 +155,7 @@ void Application::mainLoop() {
 					break;
 			}
 		}
-		glm::vec3 displacement = (left * move_left + forward * move_forward) * 0.2f; 
+		glm::vec3 displacement = (left * move_left + forward * move_forward) * PLAYER_SPEED * delta; 
 		glm::vec3 testCamPos = mainCam.getPosition() + displacement ;
 		if (maze->isPassage(testCamPos.x, testCamPos.z)) {
 			mainCam.translate(displacement * 0.98f);
@@ -161,6 +174,7 @@ void Application::mainLoop() {
 		glUniform3f(lightColor, 0.9f, 0.8f, 0.9f);
 		glUniform3f(eyePos, camPos.x, camPos.y, camPos.z);
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+
 		
 		floor.draw(); 
 		maze->drawWalls(mainCam.getMatrix(), MatrixID, lightColor);

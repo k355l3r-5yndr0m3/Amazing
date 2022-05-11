@@ -25,9 +25,10 @@ class PrimMaze {
 	public: 
 		PrimMaze(int32_t seed) {
 			mazeWall = new Mesh3D;
-			mazeWall->loadFromFile("assets/objects/MazeWall_unoptimized.obj");
+			mazeWall->loadFromFile("assets/objects/MazeWall_unoptimized_uv.obj", "assets/textures/BrickTexture.png");
+	
 			prize = new Mesh3D;
-			prize->loadFromFile("assets/objects/prize.obj");
+			prize->loadFromFile("assets/objects/prize.obj", "assets/textures/yellow.jpg");
 
 			for (int32_t i = 0; i < mazeSize; i++) {
 				for (int32_t j = 0; j < mazeSize; j++) {

@@ -14,7 +14,7 @@ Camera::~Camera() {
 
 glm::mat4 Camera::getMatrix() {
 	glm::vec3 direction = {glm::cos(facing.y) * glm::cos(facing.x), glm::sin(facing.y), glm::cos(facing.y) * glm::sin(facing.x)}; 
-	return glm::perspective(glm::radians(60.0f), (float)w / (float)h, 0.01f, 100.0f) * glm::lookAt(position, position + direction, glm::vec3(0, 1, 0));
+	return glm::perspective(glm::radians(60.0f), (float)w / (float)h, 0.01f, 500.0f) * glm::lookAt(position, position + direction, glm::vec3(0, 1, 0));
 }
 
 glm::vec3 Camera::getFacingDirection() {

@@ -6,6 +6,7 @@
 #include "ShaderProgram.hpp"
 #include "Camera.hpp"
 
+
 class Application {
 	public: 
 		Application();
@@ -23,4 +24,6 @@ class Application {
 
 		ShaderProgram* standardShader;
 		PrimMaze64* maze;
+
+		float prev_t; 
 };
