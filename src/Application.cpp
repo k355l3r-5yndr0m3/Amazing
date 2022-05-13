@@ -66,7 +66,8 @@ Application::~Application() {
 
 void Application::mainLoop() {
 	std::printf("Find the icosphere\n");
-	std::printf("There are floating cubes that will end the game if you touches them.\n");
+	std::printf("There are floating cubes that will end the game if you touches them. While dumb, they can be quite erratic.\n");
+	std::printf("Control using WASD\n");
 
 	bool alive = true;
 	Camera mainCam(windowWidth, windowHeight, {0.0f, 4.0f, 0.0f});
@@ -86,7 +87,7 @@ void Application::mainLoop() {
 
 
 	std::vector<Enemy> enemies;
-	for (int i = 0; i < 40; i++) {
+	for (int i = 0; i < 4; i++) {
 		enemies.push_back(Enemy(maze));
 	}
 
@@ -156,8 +157,9 @@ void Application::mainLoop() {
 			}
 		}
 		glm::vec3 displacement = (left * move_left + forward * move_forward) * PLAYER_SPEED * delta; 
-		glm::vec3 testCamPos = mainCam.getPosition() + displacement ;
-		if (maze->isPassage(testCamPos.x, testCamPos.z)) {
+		auto camOrgPos = mainCam.getPosition();
+		glm::vec3 testCamPos = camOrgPos + displacement ;
+		if (maze->isPassage(testCamPos) && maze->isReachable(camOrgPos, testCamPos)) {
 			mainCam.translate(displacement * 0.98f);
 		}
 

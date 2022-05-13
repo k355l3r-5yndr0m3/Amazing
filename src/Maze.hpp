@@ -113,8 +113,8 @@ class PrimMaze {
 			return !mazeMap[i][j];
 		}
 
-		bool isPassage(float x, float z) {
-			int32_t i = (int)std::round(x / MAZE_CELL_SIZE + (float)mazeSize / 2), j = (int)std::round(z / MAZE_CELL_SIZE + (float)mazeSize / 2);
+		bool isPassage(const glm::vec3& pos) {
+			int32_t i = (int)std::round(pos.x / MAZE_CELL_SIZE + (float)mazeSize / 2), j = (int)std::round(pos.z / MAZE_CELL_SIZE + (float)mazeSize / 2);
 			if (i < 0 || i >= mazeSize || j < 0 || j >= mazeSize) return true;
 			return mazeMap[i][j];
 		}
@@ -135,7 +135,14 @@ class PrimMaze {
 
 		
 		std::mt19937 pseudorandom;
-
+		
+		bool isReachable(glm::vec3 org, glm::vec3 dst) {
+			int32_t i_0 = (int)std::round(org.x / MAZE_CELL_SIZE + (float)mazeSize / 2), j_0 = (int)std::round(org.z / MAZE_CELL_SIZE + (float)mazeSize / 2);
+			int32_t i_1 = (int)std::round(dst.x / MAZE_CELL_SIZE + (float)mazeSize / 2), j_1 = (int)std::round(dst.z / MAZE_CELL_SIZE + (float)mazeSize / 2);
+			
+			int32_t test = (i_0 - i_1) * (j_0 - j_1);
+			return test == 0;
+		}
 		
 		// So much spighetty code 
 		MazeCoordinate request_new_heading(MazeCoordinate old, MazeCoordinate current) {
@@ -186,4 +193,4 @@ class PrimMaze {
 		glm::mat4 prizeMatrix;
 };
 
-typedef PrimMaze<64> PrimMaze64;
+typedef PrimMaze<16> PrimMaze64;

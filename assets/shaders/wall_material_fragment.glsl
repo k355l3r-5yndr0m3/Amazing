@@ -17,6 +17,11 @@ uniform vec3 lightColor;
 
 const vec3 ambientColor = vec3(0.3f, 0.3f, 0.3f);
 
+float rnd(float i) {
+	return mod(4000.*sin(23464.345*i+45.345),10.);
+}
+
+
 void main() {
 	vec3 normal = normalize(fragmentNormal);
 	vec3 lightDir = normalize(lightSource - fragmentPosition);
