@@ -67,6 +67,7 @@ Application::~Application() {
 void Application::mainLoop() {
 	std::printf("Find the icosphere\n");
 	std::printf("There are floating cubes that will end the game if you touches them. While dumb, they can be quite erratic.\n");
+	std::printf("Stay close to the wall and they can't reach you, but they got a habit sneaking up on unsuspecting players.\n");
 	std::printf("Control using WASD\n");
 
 	bool alive = true;
@@ -83,7 +84,7 @@ void Application::mainLoop() {
 
 	Mesh3D /*prize,*/ floor, enemy;
 	floor.loadFromFile("assets/objects/floor.obj", "assets/textures/grey.jpg");
-	enemy.loadFromFile("assets/objects/defaultCube.obj", "assets/textures/BrickTexture.png");
+	enemy.loadFromFile("assets/objects/defaultCube.obj", "assets/textures/enemy.png");
 
 
 	std::vector<Enemy> enemies;

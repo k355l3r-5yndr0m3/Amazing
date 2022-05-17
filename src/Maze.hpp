@@ -193,4 +193,4 @@ class PrimMaze {
 		glm::mat4 prizeMatrix;
 };
 
-typedef PrimMaze<16> PrimMaze64;
+typedef PrimMaze<24> PrimMaze64;
